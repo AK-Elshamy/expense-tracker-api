@@ -1,0 +1,91 @@
+# ===============================
+# Build & Dependency Artifacts
+# ===============================
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/[cite: 3]
+!**/src/test/**/target/[cite: 3]
+build/[cite: 3]
+!**/src/main/**/build/[cite: 3]
+!**/src/test/**/build/[cite: 3]
+*.class
+
+# Documentation / Default Readmes
+HELP.md[cite: 3]
+
+# ===============================
+# Environment, Secrets & Local Config
+# ===============================
+.env
+.env.*
+*.env
+application-local.properties
+application-local.yml
+application-local.yaml
+*.jks
+*.p12
+*.key
+*.crt
+
+# ===============================
+# Logs & Database Files
+# ===============================
+*.log
+logs/
+*.sqlite
+*.db
+*.mv.db
+*.trace.db
+
+# ===============================
+# JVM & Crash Dumps
+# ===============================
+hs_err_pid*
+replay_pid*
+
+# ===============================
+# IDEs & Editors
+# ===============================
+### IntelliJ IDEA ###
+.idea/[cite: 3]
+*.iws[cite: 3]
+*.iml[cite: 3]
+*.ipr[cite: 3]
+out/
+
+### Eclipse / Spring Tool Suite (STS) ###
+.apt_generated/[cite: 3]
+.classpath[cite: 3]
+.factorypath[cite: 3]
+.project[cite: 3]
+.settings/[cite: 3]
+.springBeans[cite: 3]
+.sts4-cache/[cite: 3]
+
+### VS Code ###
+.vscode/[cite: 3]
+
+### NetBeans ###
+/nbproject/private/[cite: 3]
+/nbbuild/[cite: 3]
+/dist/[cite: 3]
+/nbdist/[cite: 3]
+/.nb-gradle/[cite: 3]
+
+# ===============================
+# OS Generated Files
+# ===============================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+desktop.ini
+
+# Linux
+*~
