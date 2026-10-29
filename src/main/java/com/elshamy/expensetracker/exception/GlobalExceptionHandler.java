@@ -3,6 +3,7 @@ package com.elshamy.expensetracker.exception;
 import com.elshamy.expensetracker.dto.ErrorResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -59,6 +60,17 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request, null);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseDTO> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException ex, WebRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "Invalid request body. Check the category and field formats.",
+                request,
+                null
+        );
+    }
     // ==========================================
     // DRY Helper Method
     // ==========================================
