@@ -38,4 +38,18 @@ public class ExpenseController {
     ) {
         return expenseService.getExpenses(page);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ExpenseResponseDTO> updateExpense(
+            @PathVariable Long id,
+            @Valid @RequestBody ExpenseRequestDTO expenseRequestDTO) {
+        ExpenseResponseDTO responseDTO = expenseService.updateExpense(expenseRequestDTO, id);
+        return ResponseEntity.ok(responseDTO);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteExpense(@PathVariable Long id) {
+        expenseService.deleteExpense(id);
+        return ResponseEntity.noContent().build();
+    }
 }
