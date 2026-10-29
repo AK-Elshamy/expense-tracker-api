@@ -1,8 +1,7 @@
 package com.elshamy.expensetracker.service;
 
-import com.elshamy.expensetracker.dto.ExpenseRequestDTO;
-import com.elshamy.expensetracker.dto.ExpenseResponseDTO;
-import com.elshamy.expensetracker.dto.PageResponseDTO;
+import com.elshamy.expensetracker.dto.*;
+import com.elshamy.expensetracker.entity.Category;
 import com.elshamy.expensetracker.entity.Expense;
 import com.elshamy.expensetracker.entity.User;
 import com.elshamy.expensetracker.exception.ResourceNotFoundException;
@@ -15,8 +14,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class ExpenseService {
@@ -50,7 +51,6 @@ public class ExpenseService {
         return expense;
     }
 
-
     public ExpenseResponseDTO createExpense(ExpenseRequestDTO expenseRequestDTO) {
         User user = getAuthenticatedUser();
 
@@ -64,7 +64,6 @@ public class ExpenseService {
         Expense expenseSaved = expenseRepository.save(expense);
         return ExpenseResponseDTO.fromExpense(expenseSaved);
     }
-
 
     public PageResponseDTO<ExpenseResponseDTO> getExpenses(int page) {
         User user = getAuthenticatedUser();
@@ -81,7 +80,7 @@ public class ExpenseService {
     }
 
     public ExpenseResponseDTO updateExpense(ExpenseRequestDTO expenseRequestDTO, Long expenseId) {
-        Expense expense =getExpenseAndVerifyOwnership(expenseId);
+        Expense expense = getExpenseAndVerifyOwnership(expenseId);
         expense.setAmount(expenseRequestDTO.amount());
         expense.setDescription(expenseRequestDTO.description());
         expense.setCategory(expenseRequestDTO.category());
@@ -96,7 +95,7 @@ public class ExpenseService {
         expenseRepository.delete(expense);
     }
 
-    public  PageResponseDTO<ExpenseResponseDTO> filterExpenses(
+    public PageResponseDTO<ExpenseResponseDTO> filterExpenses(
             String period,
             LocalDate startDate,
             LocalDate endDate,
@@ -110,7 +109,7 @@ public class ExpenseService {
         if(period != null){
             to = today;
             switch (period.toLowerCase()){
-                case "week" -> from = today.minusWeeks(6);
+                case "week" -> from = today.minusDays(6);
                 case "month" -> from = today.minusMonths(1);
                 case "last3months" -> from = today.minusMonths(3);
                 default -> throw new IllegalArgumentException("Invalid period. Use Week, month, or last3months");
@@ -136,6 +135,70 @@ public class ExpenseService {
 
         Page<ExpenseResponseDTO> response = expenses.map(ExpenseResponseDTO::fromExpense);
         return PageResponseDTO.from(response);
-}
+    }
 
+    public List<CategoryExpenseDTO> getCategoryExpense() {
+        User user = getAuthenticatedUser();
+        List<Expense> expenses = expenseRepository.findByUserId(user.getId());
+
+        BigDecimal grandTotal = expenses.stream()
+                .map(Expense::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        List<CategoryExpenseDTO> categoryBreakdown = new ArrayList<>();
+
+        for (Category category : Category.values()) {
+            List<Expense> categoryExpenses = expenses.stream()
+                    .filter(expense -> expense.getCategory() == category)
+                    .toList();
+
+            long count = categoryExpenses.size();
+
+            if (count > 0) {
+                BigDecimal categoryTotalAmount = categoryExpenses.stream()
+                        .map(Expense::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                Double percentage = 0.0;
+                if (grandTotal.compareTo(BigDecimal.ZERO) > 0) {
+                    percentage = categoryTotalAmount.multiply(new BigDecimal(100))
+                            .divide(grandTotal, 2, java.math.RoundingMode.HALF_UP)
+                            .doubleValue();
+                }
+
+                categoryBreakdown.add(new CategoryExpenseDTO(category, categoryTotalAmount, count, percentage));
+            }
+        }
+
+        return categoryBreakdown;
+    }
+
+    public ExpenseSummaryDTO getExpenseSummary() {
+        User user = getAuthenticatedUser();
+        List<Expense> expenses = expenseRepository.findByUserId(user.getId());
+
+        if (expenses.isEmpty()) {
+            return new ExpenseSummaryDTO(BigDecimal.ZERO, 0L, null, null, List.of());
+        }
+
+        BigDecimal totalAmount = expenses.stream()
+                .map(Expense::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        long totalTransactions = expenses.size();
+
+        LocalDate startDate = expenses.stream()
+                .map(Expense::getExpenseDate)
+                .min(LocalDate::compareTo)
+                .orElse(null);
+
+        LocalDate endDate = expenses.stream()
+                .map(Expense::getExpenseDate)
+                .max(LocalDate::compareTo)
+                .orElse(null);
+
+        List<CategoryExpenseDTO> categoryBreakdown = getCategoryExpense();
+
+        return new ExpenseSummaryDTO(totalAmount, totalTransactions, startDate, endDate, categoryBreakdown);
+    }
 }
