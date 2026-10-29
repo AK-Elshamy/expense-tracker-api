@@ -18,7 +18,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     Optional<Expense> findByIdAndUserId(Long id, Long userId);
 
 
-    List<Expense> findByUserIdAndCategory(Long userId, Category category);
+    Page<Expense> findByUserIdAndCategory(Long userId, Category category);
 
-    List<Expense> findByUserIdAndExpenseDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
+    Page<Expense> findByUserIdAndExpenseDateBetween(Long userId, LocalDate startDate, LocalDate endDate, Pageable pageable);
 }
