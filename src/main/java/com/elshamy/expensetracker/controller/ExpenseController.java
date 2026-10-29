@@ -7,10 +7,13 @@ import com.elshamy.expensetracker.service.ExpenseService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -30,14 +33,29 @@ public class ExpenseController {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
 
+
     @GetMapping()
     public PageResponseDTO<ExpenseResponseDTO> getExpenses(
+            @RequestParam(required = false) String period,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate startDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate endDate,
             @RequestParam(defaultValue = "0")
             @Min(value = 0, message = "Page number cannot be negative")
-             int page
-    ) {
-        return expenseService.getExpenses(page);
+            int page) {
+
+        if (period == null && startDate == null && endDate == null) {
+            return expenseService.getExpenses(page);
+        }
+
+        return expenseService.filterExpenses(
+                period, startDate, endDate, page
+        );
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<ExpenseResponseDTO> updateExpense(

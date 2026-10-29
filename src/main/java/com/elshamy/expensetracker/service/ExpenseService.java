@@ -15,6 +15,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 @Service
 public class ExpenseService {
 
@@ -92,5 +95,47 @@ public class ExpenseService {
         Expense expense = getExpenseAndVerifyOwnership(expenseId);
         expenseRepository.delete(expense);
     }
+
+    public  PageResponseDTO<ExpenseResponseDTO> filterExpenses(
+            String period,
+            LocalDate startDate,
+            LocalDate endDate,
+            int page
+    ){
+        User user = getAuthenticatedUser();
+        LocalDate today = LocalDate.now();
+        LocalDate from;
+        LocalDate to;
+
+        if(period != null){
+            to = today;
+            switch (period.toLowerCase()){
+                case "week" -> from = today.minusWeeks(6);
+                case "month" -> from = today.minusMonths(1);
+                case "last3months" -> from = today.minusMonths(3);
+                default -> throw new IllegalArgumentException("Invalid period. Use Week, month, or last3months");
+            }
+        }else{
+            if(startDate == null || endDate == null){
+                throw new IllegalArgumentException("Provide a valid period or both startDate and endDate");
+            }
+
+            if(startDate.isAfter(endDate)){
+                throw new IllegalArgumentException("startDate must be before or equal to endDate");
+            }
+            from = startDate;
+            to = endDate;
+        }
+
+        Pageable pageable = PageRequest.of(page, PAGE_SIZE);
+
+        Page<Expense> expenses =
+                expenseRepository.findByUserIdAndExpenseDateBetween(
+                        user.getId(), from, to, pageable
+                );
+
+        Page<ExpenseResponseDTO> response = expenses.map(ExpenseResponseDTO::fromExpense);
+        return PageResponseDTO.from(response);
+}
 
 }
