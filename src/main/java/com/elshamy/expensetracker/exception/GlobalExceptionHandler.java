@@ -1,6 +1,7 @@
 package com.elshamy.expensetracker.exception;
 
 import com.elshamy.expensetracker.dto.ErrorResponseDTO;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -70,6 +71,21 @@ public class GlobalExceptionHandler {
                 request,
                 null
         );
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponseDTO> handleConstraintViolationException(
+            ConstraintViolationException ex, WebRequest request) {
+
+        Map<String, String> errors = new HashMap<>();
+        ex.getConstraintViolations().forEach(violation -> {
+
+            String propertyPath = violation.getPropertyPath().toString();
+            String fieldName = propertyPath.substring(propertyPath.lastIndexOf('.') + 1);
+            errors.put(fieldName, violation.getMessage());
+        });
+
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Invalid parameter", request, errors);
     }
     // ==========================================
     // DRY Helper Method
