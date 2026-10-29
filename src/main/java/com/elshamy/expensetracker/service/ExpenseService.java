@@ -10,6 +10,7 @@ import com.elshamy.expensetracker.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +31,21 @@ public class ExpenseService {
         return userRepository.findByUsername(username).orElseThrow(
                 () -> new ResourceNotFoundException("User", "username", username));
     }
+
+    private Expense getExpenseAndVerifyOwnership(Long expenseId) {
+        User user = getAuthenticatedUser();
+
+        Expense expense = expenseRepository.findById(expenseId).orElseThrow(
+                () -> new ResourceNotFoundException("Expense", "id", expenseId)
+        );
+
+        if (!expense.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("You do not have permission to modify or access this expense");
+        }
+
+        return expense;
+    }
+
 
     public ExpenseResponseDTO createExpense(ExpenseRequestDTO expenseRequestDTO) {
         User user = getAuthenticatedUser();
@@ -53,4 +69,21 @@ public class ExpenseService {
 
         return expenses.map(ExpenseResponseDTO::fromExpense);
     }
+
+    public ExpenseResponseDTO updateExpense(ExpenseRequestDTO expenseRequestDTO, Long expenseId) {
+        Expense expense =getExpenseAndVerifyOwnership(expenseId);
+        expense.setAmount(expenseRequestDTO.amount());
+        expense.setDescription(expenseRequestDTO.description());
+        expense.setCategory(expenseRequestDTO.category());
+        expense.setExpenseDate(expenseRequestDTO.expenseDate());
+
+        Expense expenseSaved = expenseRepository.save(expense);
+        return ExpenseResponseDTO.fromExpense(expenseSaved);
+    }
+
+    public void deleteExpense(Long expenseId) {
+        Expense expense = getExpenseAndVerifyOwnership(expenseId);
+        expenseRepository.delete(expense);
+    }
+
 }
