@@ -2,6 +2,7 @@ package com.elshamy.expensetracker.service;
 
 import com.elshamy.expensetracker.dto.ExpenseRequestDTO;
 import com.elshamy.expensetracker.dto.ExpenseResponseDTO;
+import com.elshamy.expensetracker.dto.PageResponseDTO;
 import com.elshamy.expensetracker.entity.Expense;
 import com.elshamy.expensetracker.entity.User;
 import com.elshamy.expensetracker.exception.ResourceNotFoundException;
@@ -45,12 +46,19 @@ public class ExpenseService {
         return ExpenseResponseDTO.fromExpense(expenseSaved);
     }
 
-    public Page<ExpenseResponseDTO> getExpenses(int page) {
+
+    public PageResponseDTO<ExpenseResponseDTO> getExpenses(int page) {
         User user = getAuthenticatedUser();
 
         Pageable pageable = PageRequest.of(page, PAGE_SIZE);
-        Page<Expense> expenses = expenseRepository.findByUserId(user.getId(), pageable);
 
-        return expenses.map(ExpenseResponseDTO::fromExpense);
+        Page<Expense> expenses =
+                expenseRepository.findByUserId(user.getId(), pageable);
+
+        Page<ExpenseResponseDTO> pageResponse =
+                expenses.map(ExpenseResponseDTO::fromExpense);
+
+        return PageResponseDTO.from(pageResponse);
     }
+
 }
