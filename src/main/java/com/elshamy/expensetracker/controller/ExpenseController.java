@@ -2,6 +2,7 @@ package com.elshamy.expensetracker.controller;
 
 import com.elshamy.expensetracker.dto.ExpenseRequestDTO;
 import com.elshamy.expensetracker.dto.ExpenseResponseDTO;
+import com.elshamy.expensetracker.dto.ExpenseSummaryDTO;
 import com.elshamy.expensetracker.dto.PageResponseDTO;
 import com.elshamy.expensetracker.service.ExpenseService;
 import jakarta.validation.Valid;
@@ -54,6 +55,13 @@ public class ExpenseController {
         return expenseService.filterExpenses(
                 period, startDate, endDate, page
         );
+    }
+
+
+    @GetMapping("/summary")
+    public ResponseEntity<ExpenseSummaryDTO> getExpenseSummary() {
+        ExpenseSummaryDTO summary = expenseService.getExpenseSummary();
+        return ResponseEntity.ok(summary);
     }
 
 
