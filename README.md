@@ -38,6 +38,11 @@
 
 The goal is straightforward: help users understand where their money goes — before it disappears.
 
+---
+
+[![roadmap.sh](https://img.shields.io/badge/roadmap.sh-Expense%20Tracker%20API-0A0A0A?style=for-the-badge&logo=roadmap.sh&logoColor=white)](https://roadmap.sh/projects/expense-tracker-api)
+
+---
 
 ## ✨ Features
 
